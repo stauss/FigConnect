@@ -9,6 +9,7 @@ export const BaseCommandSchema = z.object({
   params: z.record(z.any()),
   parent: z.string().optional(),
   timestamp: z.string().datetime(),
+  idempotencyKey: z.string().optional(), // For preventing duplicate execution
 });
 
 export type BaseCommand = z.infer<typeof BaseCommandSchema>;
@@ -132,6 +133,7 @@ export const CommandResponseSchema = z.object({
     .optional(),
   timestamp: z.string().datetime(),
   executionTime: z.number().optional(),
+  artifacts: z.array(z.string()).optional(), // References to result artifacts
 });
 
 export type CommandResponse = z.infer<typeof CommandResponseSchema>;

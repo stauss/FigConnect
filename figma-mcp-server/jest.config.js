@@ -13,6 +13,7 @@ export default {
         tsconfig: {
           module: "ES2022",
           moduleResolution: "node",
+          rootDir: ".",
         },
       },
     ],

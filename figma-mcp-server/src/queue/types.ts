@@ -7,6 +7,12 @@ export type CommandStatus =
   | "failed"
   | "timeout";
 
+/**
+ * Priority levels for command execution
+ * Enables queue prioritization (interactive tasks first, refactors later)
+ */
+export type Priority = "interactive" | "batch" | "refactor" | "low";
+
 export interface QueuedCommand {
   command: BaseCommand;
   fileKey: string;
@@ -16,6 +22,8 @@ export interface QueuedCommand {
   createdAt: number;
   updatedAt: number;
   timeoutAt: number;
+  priority?: Priority; // Optional priority for future prioritization
+  taskId?: string; // Link to comment task if applicable
 }
 
 export interface QueueStats {
@@ -25,4 +33,5 @@ export interface QueueStats {
   failed: number;
   timeout: number;
   total: number;
+  byPriority?: Record<Priority, number>; // Stats by priority
 }

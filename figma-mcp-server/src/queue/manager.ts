@@ -1,4 +1,4 @@
-import { QueuedCommand, QueueStats, CommandStatus } from "./types.js";
+import { QueuedCommand, QueueStats, CommandStatus, Priority } from "./types.js";
 import { BaseCommand, CommandResponse } from "../commands/types.js";
 import { logger } from "../logger.js";
 
@@ -7,9 +7,24 @@ export class CommandQueue {
   private readonly defaultTimeout = 30000; // 30 seconds
 
   /**
+   * Priority order (higher priority first)
+   */
+  private readonly priorityOrder: Priority[] = [
+    "interactive",
+    "batch",
+    "refactor",
+    "low",
+  ];
+
+  /**
    * Add command to queue
    */
-  add(command: BaseCommand, fileKey: string, timeout?: number): string {
+  add(
+    command: BaseCommand,
+    fileKey: string,
+    timeout?: number,
+    priority?: Priority,
+  ): string {
     const queued: QueuedCommand = {
       command,
       fileKey,
@@ -17,12 +32,71 @@ export class CommandQueue {
       createdAt: Date.now(),
       updatedAt: Date.now(),
       timeoutAt: Date.now() + (timeout ?? this.defaultTimeout),
+      priority: priority || "batch", // Default to batch priority
     };
 
     this.queue.set(command.id, queued);
-    logger.info(`Command ${command.id} added to queue`);
+    logger.info(
+      `Command ${command.id} added to queue (priority: ${queued.priority})`,
+    );
 
     return command.id;
+  }
+
+  /**
+   * Add command with explicit priority
+   */
+  enqueueWithPriority(
+    command: BaseCommand,
+    fileKey: string,
+    priority: Priority,
+    timeout?: number,
+  ): string {
+    return this.add(command, fileKey, timeout, priority);
+  }
+
+  /**
+   * Get next command based on priority
+   * Returns highest priority pending command
+   */
+  getNext(priorities?: Priority[]): QueuedCommand | null {
+    const allowedPriorities = priorities || this.priorityOrder;
+    const pending = this.getByStatus("pending");
+
+    if (pending.length === 0) {
+      return null;
+    }
+
+    // Filter to only allowed priorities if specified
+    const filtered = priorities
+      ? pending.filter((cmd) => {
+          const priority = cmd.priority || "batch";
+          return allowedPriorities.includes(priority);
+        })
+      : pending;
+
+    if (filtered.length === 0) {
+      return null;
+    }
+
+    // Sort by priority (using priority order)
+    const sorted = filtered.sort((a, b) => {
+      const aPriority = a.priority || "batch";
+      const bPriority = b.priority || "batch";
+
+      const aIndex = allowedPriorities.indexOf(aPriority);
+      const bIndex = allowedPriorities.indexOf(bPriority);
+
+      // Lower index = higher priority
+      if (aIndex !== bIndex) {
+        return aIndex - bIndex;
+      }
+
+      // Same priority: FIFO
+      return a.createdAt - b.createdAt;
+    });
+
+    return sorted[0] || null;
   }
 
   /**
@@ -128,10 +202,20 @@ export class CommandQueue {
       failed: 0,
       timeout: 0,
       total: this.queue.size,
+      byPriority: {
+        interactive: 0,
+        batch: 0,
+        refactor: 0,
+        low: 0,
+      },
     };
 
     this.queue.forEach((command) => {
       stats[command.status]++;
+      const priority = command.priority || "batch";
+      if (stats.byPriority && priority in stats.byPriority) {
+        stats.byPriority[priority as Priority]++;
+      }
     });
 
     return stats;

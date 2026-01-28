@@ -92,6 +92,10 @@ export class BridgeServer {
       this.handleHealth(res);
     } else if (req.method === "GET" && path === "/api/stats") {
       this.handleGetStats(res);
+    } else if (req.method === "POST" && path === "/api/capabilities") {
+      this.handlePostCapabilities(req, res);
+    } else if (req.method === "GET" && path === "/api/capabilities") {
+      this.handleGetCapabilities(res);
     } else {
       this.sendError(res, 404, "Not Found");
     }
@@ -221,6 +225,64 @@ export class BridgeServer {
   private sendJson(res: ServerResponse, status: number, data: unknown): void {
     res.writeHead(status, { "Content-Type": "application/json" });
     res.end(JSON.stringify(data));
+  }
+
+  /**
+   * POST /api/capabilities - Receive capability announcements from plugin
+   */
+  private handlePostCapabilities(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): void {
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+
+    req.on("end", () => {
+      try {
+        const data = JSON.parse(body);
+        const { pluginId, capabilities } = data;
+
+        if (!pluginId || !capabilities) {
+          this.sendError(res, 400, "Missing pluginId or capabilities");
+          return;
+        }
+
+        logger.info(
+          `Received capabilities from plugin ${pluginId}: ${capabilities.length} capabilities`,
+        );
+
+        // Store capabilities (future: use capability registry)
+        // For MVP: Just log, future: register with plugin registry
+
+        this.sendJson(res, 200, {
+          success: true,
+          registered: capabilities.length,
+        });
+      } catch (error) {
+        logger.error("Error processing capabilities:", error);
+        this.sendError(res, 400, "Invalid JSON");
+      }
+    });
+
+    req.on("error", (error) => {
+      logger.error("Request error:", error);
+      this.sendError(res, 500, "Request Error");
+    });
+  }
+
+  /**
+   * GET /api/capabilities - Get registered capabilities
+   */
+  private handleGetCapabilities(res: ServerResponse): void {
+    // Future: Return capabilities from registry
+    // For MVP: Return empty or hardcoded list
+    this.sendJson(res, 200, {
+      capabilities: [],
+      message: "Capability registry not yet implemented",
+    });
   }
 
   /**
