@@ -1,0 +1,328 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Figma MCP Server Tools",
+    "version": "1.0.0",
+    "description": "Model Context Protocol tools for interacting with Figma design files"
+  },
+  "servers": [
+    {
+      "url": "mcp://figma-mcp-server",
+      "description": "MCP Server via stdio transport"
+    }
+  ],
+  "paths": {},
+  "components": {
+    "schemas": {
+      "GetFileStructureInput": {
+        "type": "object",
+        "required": ["file_key"],
+        "properties": {
+          "file_key": {
+            "type": "string",
+            "description": "The Figma file key (from URL)"
+          },
+          "depth": {
+            "type": "integer",
+            "description": "Maximum depth to traverse (default: 5)",
+            "minimum": 1,
+            "maximum": 10
+          }
+        }
+      },
+      "GetNodeDetailsInput": {
+        "type": "object",
+        "required": ["file_key", "node_ids"],
+        "properties": {
+          "file_key": {
+            "type": "string"
+          },
+          "node_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^\\d+:\\d+$"
+            },
+            "description": "Array of node IDs to fetch"
+          }
+        }
+      },
+      "SearchNodesInput": {
+        "type": "object",
+        "required": ["file_key", "query"],
+        "properties": {
+          "file_key": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string",
+            "description": "Search term for node names"
+          },
+          "node_type": {
+            "type": "string",
+            "description": "Filter by node type (optional)"
+          }
+        }
+      },
+      "ExportNodeInput": {
+        "type": "object",
+        "required": ["file_key", "node_ids"],
+        "properties": {
+          "file_key": {
+            "type": "string"
+          },
+          "node_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "format": {
+            "type": "string",
+            "enum": ["png", "svg", "pdf", "jpg"],
+            "default": "png"
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 4,
+            "default": 1
+          }
+        }
+      },
+      "PostCommandInput": {
+        "type": "object",
+        "required": ["file_key", "command", "params"],
+        "properties": {
+          "file_key": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string",
+            "enum": [
+              "create_frame",
+              "create_text",
+              "create_rectangle",
+              "apply_auto_layout",
+              "create_component",
+              "apply_style",
+              "set_properties"
+            ]
+          },
+          "params": {
+            "type": "object",
+            "description": "Command-specific parameters"
+          },
+          "parent": {
+            "type": "string",
+            "pattern": "^\\d+:\\d+$",
+            "description": "Parent node ID (optional)"
+          },
+          "wait_for_completion": {
+            "type": "boolean",
+            "default": false
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000,
+            "description": "Timeout in milliseconds"
+          }
+        }
+      },
+      "GetCommandStatusInput": {
+        "type": "object",
+        "required": ["command_id"],
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "pattern": "^cmd-\\d+-[a-f0-9]{8}$"
+          }
+        }
+      },
+      "ToolResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["text", "image", "resource"]
+                },
+                "text": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "string"
+                },
+                "mimeType": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "isError": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "x-mcp-tools": {
+    "tools": [
+      {
+        "name": "get_file_structure",
+        "description": "Get the complete node tree structure of a Figma file. Returns hierarchical view of all frames, components, and layers.",
+        "inputSchema": {
+          "$ref": "#/components/schemas/GetFileStructureInput"
+        }
+      },
+      {
+        "name": "get_node_details",
+        "description": "Get detailed properties of specific nodes by their IDs. Returns full node data including styles, constraints, and effects.",
+        "inputSchema": {
+          "$ref": "#/components/schemas/GetNodeDetailsInput"
+        }
+      },
+      {
+        "name": "search_nodes",
+        "description": "Search for nodes by name or type within a Figma file. Useful for finding specific layers or components.",
+        "inputSchema": {
+          "$ref": "#/components/schemas/SearchNodesInput"
+        }
+      },
+      {
+        "name": "get_components",
+        "description": "List all components in a Figma file with their properties and metadata.",
+        "inputSchema": {
+          "type": "object",
+          "required": ["file_key"],
+          "properties": {
+            "file_key": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "name": "get_styles",
+        "description": "Get all color, text, and effect styles defined in the Figma file.",
+        "inputSchema": {
+          "type": "object",
+          "required": ["file_key"],
+          "properties": {
+            "file_key": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "name": "get_variables",
+        "description": "Get all design variables (tokens) including colors, numbers, strings, and booleans.",
+        "inputSchema": {
+          "type": "object",
+          "required": ["file_key"],
+          "properties": {
+            "file_key": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "name": "export_node",
+        "description": "Export nodes as PNG, SVG, PDF, or JPG images. Supports custom scale and format options.",
+        "inputSchema": {
+          "$ref": "#/components/schemas/ExportNodeInput"
+        }
+      },
+      {
+        "name": "get_comments",
+        "description": "Get all comments in the Figma file with author, timestamp, and location.",
+        "inputSchema": {
+          "type": "object",
+          "required": ["file_key"],
+          "properties": {
+            "file_key": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "name": "get_file_versions",
+        "description": "Get version history of the Figma file including labels, timestamps, and authors.",
+        "inputSchema": {
+          "type": "object",
+          "required": ["file_key"],
+          "properties": {
+            "file_key": {
+              "type": "string"
+            },
+            "page_size": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        }
+      },
+      {
+        "name": "post_command",
+        "description": "Post a structured command to Figma as a comment for execution by the plugin.",
+        "inputSchema": {
+          "$ref": "#/components/schemas/PostCommandInput"
+        }
+      },
+      {
+        "name": "get_command_status",
+        "description": "Get the current status of a posted command (pending, posted, completed, failed, timeout).",
+        "inputSchema": {
+          "$ref": "#/components/schemas/GetCommandStatusInput"
+        }
+      },
+      {
+        "name": "post_batch_commands",
+        "description": "Post multiple commands as a batch with optional transaction semantics.",
+        "inputSchema": {
+          "type": "object",
+          "required": ["file_key", "commands"],
+          "properties": {
+            "file_key": {
+              "type": "string"
+            },
+            "commands": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["command", "params"],
+                "properties": {
+                  "command": {
+                    "type": "string"
+                  },
+                  "params": {
+                    "type": "object"
+                  },
+                  "parent": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "wait_for_completion": {
+              "type": "boolean",
+              "default": true
+            },
+            "transaction": {
+              "type": "boolean",
+              "default": false,
+              "description": "Execute as atomic transaction (all-or-nothing)"
+            }
+          }
+        }
+      }
+    ]
+  }
+}
