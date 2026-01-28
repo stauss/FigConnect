@@ -20,8 +20,15 @@ import {
   getFileVersions,
 } from "./tools/read-tools.js";
 import { exportNode } from "./tools/export-tools.js";
+import {
+  postCommand,
+  getCommandStatus,
+  postBatchCommands,
+  getQueueStats,
+} from "./tools/command-tools.js";
 import { logger } from "./logger.js";
 import { CONFIG } from "./config.js";
+import { bridgeServer } from "./bridge/server.js";
 
 // Create MCP server
 const server = new Server(
@@ -95,6 +102,23 @@ server.setRequestHandler(
           result = await getFileVersions(args as any);
           break;
 
+        // Phase 2: Command tools
+        case "post_command":
+          result = await postCommand(args as any);
+          break;
+
+        case "get_command_status":
+          result = await getCommandStatus(args as any);
+          break;
+
+        case "post_batch_commands":
+          result = await postBatchCommands(args as any);
+          break;
+
+        case "get_queue_stats":
+          result = await getQueueStats();
+          break;
+
         default:
           return {
             content: [{ type: "text", text: `Unknown tool: ${name}` }],
@@ -118,11 +142,35 @@ async function main() {
   logger.info(`Figma API Base: ${CONFIG.figma.apiBase}`);
   logger.info(`Log Level: ${CONFIG.server.logLevel}`);
 
+  // Start bridge server for plugin communication
+  if (CONFIG.bridge.enabled) {
+    try {
+      await bridgeServer.start();
+      logger.info(`Bridge server enabled on port ${CONFIG.bridge.port}`);
+    } catch (error) {
+      logger.error("Failed to start bridge server:", error);
+      // Continue without bridge - MCP server can still work
+    }
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
   logger.info("Figma MCP Server running");
 }
+
+// Graceful shutdown
+process.on("SIGINT", async () => {
+  logger.info("Shutting down...");
+  await bridgeServer.stop();
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  logger.info("Shutting down...");
+  await bridgeServer.stop();
+  process.exit(0);
+});
 
 main().catch((error) => {
   logger.error("Fatal error:", error);

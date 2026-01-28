@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>MCP Bridge</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      visibility: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="status">MCP Bridge Active</div>
+
+  <script>
+    // Configuration
+    const DEBUG = true;
+
+    function log(...args) {
+      if (DEBUG) {
+        console.log("[MCP Bridge UI]", ...args);
+      }
+    }
+
+    // Handle messages from plugin code
+    window.onmessage = async (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      log("Received message:", msg.type);
+
+      switch (msg.type) {
+        case "fetch":
+          await handleFetch(msg);
+          break;
+        default:
+          log("Unknown message type:", msg.type);
+      }
+    };
+
+    // Handle fetch requests
+    async function handleFetch(msg) {
+      const { url, method = "GET", body } = msg;
+
+      try {
+        log(`Fetching: ${method} ${url}`);
+
+        const options = {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+
+        if (body && method !== "GET") {
+          options.body = body;
+        }
+
+        const response = await fetch(url, options);
+        const data = await response.json();
+
+        log("Fetch response:", data);
+
+        // Send response back to plugin
+        if (method === "GET") {
+          parent.postMessage(
+            {
+              pluginMessage: {
+                type: "fetch-response",
+                data,
+              },
+            },
+            "*"
+          );
+        } else {
+          parent.postMessage(
+            {
+              pluginMessage: {
+                type: "post-response",
+                data,
+              },
+            },
+            "*"
+          );
+        }
+      } catch (error) {
+        log("Fetch error:", error.message);
+
+        // Send error back to plugin
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: method === "GET" ? "fetch-error" : "post-error",
+              data: {
+                message: error.message,
+                url,
+              },
+            },
+          },
+          "*"
+        );
+      }
+    }
+
+    // Notify plugin that UI is ready
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: "ui-ready",
+        },
+      },
+      "*"
+    );
+
+    log("UI initialized");
+  </script>
+</body>
+
+</html>

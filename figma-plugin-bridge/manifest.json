@@ -1,0 +1,14 @@
+{
+  "name": "Figma MCP Bridge",
+  "id": "figma-mcp-bridge-1234567890",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "documentAccess": "dynamic-page",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["http://localhost:3030"],
+    "reasoning": "Plugin communicates with local MCP bridge server for command execution"
+  },
+  "permissions": ["currentuser"]
+}
