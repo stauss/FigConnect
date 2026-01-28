@@ -42,20 +42,140 @@
 - [ ] T023 Verify end-to-end flow with Claude Code
 - [ ] T024 Add comprehensive documentation in `README.md`
 
-## Dependencies
+## Phase A: Collaboration Basics (Interactive Mode) - CURRENT PRIORITY
 
-1. **Setup & Foundation** (T001-T006) must be completed before any tools.
-2. **Read-Only Tools** (T007-T014) enable US1 and are prerequisites for US2 (need to read before writing intelligently).
-3. **Command System** (T015-T018) enables US2 and is a prerequisite for US3 (plugin needs commands to execute).
-4. **Plugin Bridge** (T019-T022) enables US3 and completes the write loop.
+**Status**: Ready to start  
+**Goal**: Enable _async_ AI collaboration via **native Figma comments** (no custom chat UI).  
+**Key shift**: Comments are the UX surface; the plugin is the execution engine.
 
-## Implementation Strategy
+---
 
-1. **MVP (Phase 1-3)**: Focus on getting the MCP server running with Read capabilities first. This delivers immediate value (context gathering) even without write access.
-2. **Write Capability (Phase 4-5)**: Once reading is stable, implement the "Bridge" architecture.
+### A1) Comment-Based Collaboration Loop (NEW)
 
-## Parallel Execution Opportunities
+> Designers leave tasks directly on the canvas using comments.  
+> Example: `Claude: fix spacing here`  
+> Claude replies in-thread with status + results.
 
-- **T004 (Client)** and **T005 (Utils)** can be built in parallel.
-- **T007-T012 (Tools)** are largely independent once the Client is ready.
-- **Phase 4 (Server-side commands)** and **Phase 5 (Plugin-side execution)** can be developed in parallel if the JSON schema (T015) is agreed upon first.
+#### Comment Intake & Routing (Server)
+
+- [ ] TAC001 Define comment trigger contract
+  - Primary: `Claude:` prefix (case-insensitive)
+  - Secondary (optional): `/claude`
+  - Treat “plain comments” as normal human comments
+
+- [ ] TAC002 Implement comment ingestion (choose one, keep the other as fallback)
+  - Webhook path (preferred): receive `FILE_COMMENT` events and enqueue tasks
+  - Polling fallback: periodically call `get_comments` and diff new items
+
+- [ ] TAC003 Add comment dedupe + cursor tracking
+  - Store last-seen comment IDs / timestamps per file_key
+  - Prevent double-processing (webhook retries / polling overlap)
+
+- [ ] TAC004 Implement Comment → Task parser in `figma-mcp-server/src/comments/parser.ts`
+  - Extract: file_key, comment_id, parent_id/thread_id, author, created_at, message, client_meta
+  - Determine: priority (optional keywords), scope (single-node vs multi-node)
+
+- [ ] TAC005 Implement “ack” + “reply” helpers in Figma client
+  - `post_comment_reply({ file_key, parent_comment_id, message })`
+  - Standardize status strings: `Queued ⏳`, `Working…`, `Needs input ❓`, `Done ✅`, `Failed 🧨`
+
+- [ ] TAC006 Implement comment-task queue + state machine in `figma-mcp-server/src/queue/comment-queue.ts`
+  - States: `queued`, `in_progress`, `needs_input`, `done`, `failed`, `canceled`
+  - Capture: durations, errors, command IDs, resulting node IDs
+
+- [ ] TAC007 Implement safety gating (Plan → Confirm → Execute)
+  - Destructive actions (`delete`, bulk updates, style changes) require confirmation reply:
+    - Claude replies with plan and waits for `Claude: go` in same thread
+
+- [ ] TAC008 Add observability for comment tasks
+  - Structured logs by task_id/comment_id
+  - `/api/stats` includes queue counts by status + average durations
+
+#### Comment Context → Target Node Resolution (Plugin)
+
+- [ ] TAC009 Implement `resolve_target_from_comment` command executor in `figma-plugin-bridge/src/commands/comments.ts`
+  - Input: `{ frame_node_id?, client_meta, x?, y?, thread_id/comment_id }`
+  - Output: `{ target_node_id, confidence, reason, boundsSnapshot }`
+  - Approach: use frame + offset hit-testing to find the best node under the comment pin
+
+- [ ] TAC010 Implement optional “pointing” feedback
+  - `flash_node` / `focus_viewport_on_node` command for UX (“Claude is working _here_”)
+
+#### Intent → Actions (Use existing command system)
+
+- [ ] TAC011 Add “comment task router” in MCP server
+  - Steps:
+    1. parse comment task
+    2. resolve target node (via plugin command if needed)
+    3. gather context (node details / nearby nodes / styles)
+    4. decide actions (AI)
+    5. execute commands (existing bridge)
+    6. reply in thread with summary + any follow-ups
+
+- [ ] TAC012 Add task templates for common comment ops (quick wins)
+  - “move X by N px”, “duplicate”, “delete”, “rename”, “apply style”, “fix padding”
+  - Prefer small, composable commands
+
+---
+
+### A2) Core Manipulation Commands (Still Needed)
+
+These remain the core “hands” that make comment tasks actionable.
+
+- [ ] TA003 Implement `move_node` command executor in `figma-plugin-bridge/src/commands/manipulation.ts`
+  - Move nodes by delta (x, y) or absolute position
+  - Command: `move_node` with `node_id`, `x`, `y`, `relative` flag
+
+- [ ] TA004 Implement `duplicate_node` command executor in `figma-plugin-bridge/src/commands/manipulation.ts`
+  - Duplicate specified nodes
+  - Command: `duplicate_node` with `node_id` (or `node_ids`)
+
+- [ ] TA005 Implement `delete_node` command executor in `figma-plugin-bridge/src/commands/manipulation.ts`
+  - Delete specified nodes
+  - Command: `delete_node` with `node_id` or `node_ids` array
+
+- [ ] TA007 Add manipulation command types in `figma-mcp-server/src/commands/types.ts`
+  - Define Zod schemas for `move_node`, `duplicate_node`, `delete_node`
+
+- [ ] TA008 Update command executor router in `figma-plugin-bridge/src/commands/executor.ts`
+  - Add routing for manipulation + comment commands
+  - Ensure errors are returned in a structured response
+
+- [ ] TA006 Register collaboration tools in `figma-mcp-server/src/tools/registry.ts`
+  - Register any new MCP tools used by the comment-task pipeline (if needed)
+  - Ensure command schemas are available to the validator
+
+---
+
+### A3) Deprioritized / Optional (Selection-Based)
+
+Keep these only if you find gaps during real usage.
+
+- [ ] TA001 Implement `get_selection` tool in `figma-mcp-server/src/tools/collaboration-tools.ts` (optional)
+- [ ] TA002 Implement `select_node` tool in `figma-mcp-server/src/tools/collaboration-tools.ts` (optional)
+
+---
+
+### Implementation Notes (Updated)
+
+- Comments are the primary UX surface; plugin UI stays minimal.
+- Node manipulation and comment-context targeting require **plugin execution** (not REST-only).
+- Start with a _single-file_ MVP: one file_key, one team, prove the loop.
+
+---
+
+### Testing Strategy (Updated)
+
+1. Create comment with `Claude:` prefix pinned to a specific element
+2. Verify ingestion → task creation → immediate “Queued ⏳” reply
+3. Verify target resolution returns correct `target_node_id`
+4. Verify manipulation command runs end-to-end (move/duplicate/delete)
+5. Verify completion reply summarizes actions + any follow-ups
+6. Verify safety gating: destructive action requires `Claude: go`
+
+---
+
+### (Future) Integrations (Not this phase)
+
+- Slack notifications + screenshots after task completion
+- Daily summaries, “needs input” pings, batch reports
