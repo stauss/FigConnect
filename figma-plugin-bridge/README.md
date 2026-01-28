@@ -78,15 +78,38 @@ figma-plugin-bridge/
 
 ## Supported Commands
 
-| Command             | Description                |
-| ------------------- | -------------------------- |
-| `create_frame`      | Create a new frame         |
-| `create_text`       | Create text node           |
-| `create_rectangle`  | Create rectangle shape     |
-| `apply_auto_layout` | Apply auto-layout to frame |
-| `create_component`  | Create a component         |
-| `apply_style`       | Apply a style to node      |
-| `set_properties`    | Set node properties        |
+### Creation Commands
+
+| Command            | Description            |
+| ------------------ | ---------------------- |
+| `create_frame`     | Create a new frame     |
+| `create_text`      | Create text node       |
+| `create_rectangle` | Create rectangle shape |
+| `create_component` | Create a component     |
+
+### Manipulation Commands
+
+| Command          | Description                              |
+| ---------------- | ---------------------------------------- |
+| `move_node`      | Move nodes by delta or absolute position |
+| `duplicate_node` | Duplicate single or multiple nodes       |
+| `delete_node`    | Delete single or multiple nodes          |
+| `resize_node`    | Resize nodes with aspect ratio option    |
+
+### Grouping Commands
+
+| Command         | Description                               |
+| --------------- | ----------------------------------------- |
+| `group_nodes`   | Combine multiple nodes into a group       |
+| `ungroup_nodes` | Break apart a group into individual nodes |
+
+### Layout & Styling Commands
+
+| Command             | Description                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------- |
+| `apply_auto_layout` | Apply auto-layout to frame                                                               |
+| `apply_style`       | Apply a style to node                                                                    |
+| `set_properties`    | Set node properties (supports gradients, effects, constraints, strokes, text properties) |
 
 ## Configuration
 

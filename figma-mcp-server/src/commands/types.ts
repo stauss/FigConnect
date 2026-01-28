@@ -138,6 +138,56 @@ export const CommandResponseSchema = z.object({
 
 export type CommandResponse = z.infer<typeof CommandResponseSchema>;
 
+// Move node schema
+export const MoveNodeParamsSchema = z.object({
+  nodeId: z.union([z.string(), z.array(z.string())]),
+  x: z.number().optional(),
+  y: z.number().optional(),
+  relative: z.boolean().default(false), // true = delta, false = absolute
+});
+
+export type MoveNodeParams = z.infer<typeof MoveNodeParamsSchema>;
+
+// Duplicate node schema
+export const DuplicateNodeParamsSchema = z.object({
+  nodeId: z.union([z.string(), z.array(z.string())]),
+});
+
+export type DuplicateNodeParams = z.infer<typeof DuplicateNodeParamsSchema>;
+
+// Delete node schema
+export const DeleteNodeParamsSchema = z.object({
+  nodeId: z.union([z.string(), z.array(z.string())]),
+});
+
+export type DeleteNodeParams = z.infer<typeof DeleteNodeParamsSchema>;
+
+// Resize node schema
+export const ResizeNodeParamsSchema = z.object({
+  nodeId: z.string(),
+  width: z.number().positive().optional(),
+  height: z.number().positive().optional(),
+  relative: z.boolean().default(false),
+  maintainAspectRatio: z.boolean().default(false),
+});
+
+export type ResizeNodeParams = z.infer<typeof ResizeNodeParamsSchema>;
+
+// Group nodes schema
+export const GroupNodesParamsSchema = z.object({
+  nodeIds: z.array(z.string()).min(2),
+  name: z.string().optional(),
+});
+
+export type GroupNodesParams = z.infer<typeof GroupNodesParamsSchema>;
+
+// Ungroup nodes schema
+export const UngroupNodesParamsSchema = z.object({
+  nodeId: z.string(), // Group node ID
+});
+
+export type UngroupNodesParams = z.infer<typeof UngroupNodesParamsSchema>;
+
 // Supported command types
 export type CommandType =
   | "create_frame"
@@ -146,4 +196,10 @@ export type CommandType =
   | "apply_auto_layout"
   | "create_component"
   | "apply_style"
-  | "set_properties";
+  | "set_properties"
+  | "move_node"
+  | "duplicate_node"
+  | "delete_node"
+  | "resize_node"
+  | "group_nodes"
+  | "ungroup_nodes";

@@ -201,3 +201,125 @@ export function setPropertiesCommand(params: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Move node command template
+ */
+export function moveNodeCommand(params: {
+  nodeId: string | string[];
+  x?: number;
+  y?: number;
+  relative?: boolean;
+}): BaseCommand {
+  return {
+    type: "mcp-command",
+    version: "1.0",
+    id: generateCommandId(),
+    command: "move_node",
+    params: {
+      nodeId: params.nodeId,
+      x: params.x,
+      y: params.y,
+      relative: params.relative ?? false,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Duplicate node command template
+ */
+export function duplicateNodeCommand(params: {
+  nodeId: string | string[];
+}): BaseCommand {
+  return {
+    type: "mcp-command",
+    version: "1.0",
+    id: generateCommandId(),
+    command: "duplicate_node",
+    params: {
+      nodeId: params.nodeId,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Delete node command template
+ */
+export function deleteNodeCommand(params: {
+  nodeId: string | string[];
+}): BaseCommand {
+  return {
+    type: "mcp-command",
+    version: "1.0",
+    id: generateCommandId(),
+    command: "delete_node",
+    params: {
+      nodeId: params.nodeId,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Resize node command template
+ */
+export function resizeNodeCommand(params: {
+  nodeId: string;
+  width?: number;
+  height?: number;
+  relative?: boolean;
+  maintainAspectRatio?: boolean;
+}): BaseCommand {
+  return {
+    type: "mcp-command",
+    version: "1.0",
+    id: generateCommandId(),
+    command: "resize_node",
+    params: {
+      nodeId: params.nodeId,
+      width: params.width,
+      height: params.height,
+      relative: params.relative ?? false,
+      maintainAspectRatio: params.maintainAspectRatio ?? false,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Group nodes command template
+ */
+export function groupNodesCommand(params: {
+  nodeIds: string[];
+  name?: string;
+}): BaseCommand {
+  return {
+    type: "mcp-command",
+    version: "1.0",
+    id: generateCommandId(),
+    command: "group_nodes",
+    params: {
+      nodeIds: params.nodeIds,
+      name: params.name,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Ungroup nodes command template
+ */
+export function ungroupNodesCommand(params: { nodeId: string }): BaseCommand {
+  return {
+    type: "mcp-command",
+    version: "1.0",
+    id: generateCommandId(),
+    command: "ungroup_nodes",
+    params: {
+      nodeId: params.nodeId,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}

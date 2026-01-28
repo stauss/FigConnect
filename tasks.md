@@ -149,10 +149,7 @@ These remain the core “hands” that make comment tasks actionable.
 
 ### A3) Deprioritized / Optional (Selection-Based)
 
-Keep these only if you find gaps during real usage.
-
-- [ ] TA001 Implement `get_selection` tool in `figma-mcp-server/src/tools/collaboration-tools.ts` (optional)
-- [ ] TA002 Implement `select_node` tool in `figma-mcp-server/src/tools/collaboration-tools.ts` (optional)
+**Note:** Selection-based tools removed - comments handle targeting via pins. These are no longer needed.
 
 ---
 

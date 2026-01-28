@@ -5,6 +5,13 @@ import { executeApplyAutoLayout } from "./layout";
 import { executeCreateComponent } from "./component";
 import { executeApplyStyle } from "./styles";
 import { executeSetProperties } from "./properties";
+import {
+  executeMoveNode,
+  executeDuplicateNode,
+  executeDeleteNode,
+  executeResizeNode,
+} from "./manipulation";
+import { executeGroupNodes, executeUngroupNodes } from "./grouping";
 import { Logger } from "../utils/logger";
 import { getParentNode } from "../utils/nodes";
 import type { Command, CommandResult } from "./types";
@@ -52,6 +59,30 @@ export async function executeCommand(command: Command): Promise<CommandResult> {
 
       case "set_properties":
         result = await executeSetProperties(command.params, command.parent);
+        break;
+
+      case "move_node":
+        result = await executeMoveNode(command.params, command.parent);
+        break;
+
+      case "duplicate_node":
+        result = await executeDuplicateNode(command.params);
+        break;
+
+      case "delete_node":
+        result = await executeDeleteNode(command.params);
+        break;
+
+      case "resize_node":
+        result = await executeResizeNode(command.params, command.parent);
+        break;
+
+      case "group_nodes":
+        result = await executeGroupNodes(command.params);
+        break;
+
+      case "ungroup_nodes":
+        result = await executeUngroupNodes(command.params, command.parent);
         break;
 
       default:

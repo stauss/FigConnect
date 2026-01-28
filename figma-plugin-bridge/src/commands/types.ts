@@ -22,7 +22,13 @@ export type CommandType =
   | "apply_auto_layout"
   | "create_component"
   | "apply_style"
-  | "set_properties";
+  | "set_properties"
+  | "move_node"
+  | "duplicate_node"
+  | "delete_node"
+  | "resize_node"
+  | "group_nodes"
+  | "ungroup_nodes";
 
 export interface CommandResult {
   success: boolean;

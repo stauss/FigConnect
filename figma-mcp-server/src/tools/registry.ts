@@ -84,7 +84,7 @@ export const COMMAND_TOOLS = [
   {
     name: "post_command",
     description:
-      "Post a command to be executed by the Figma plugin. Supports create_frame, create_text, create_rectangle, apply_auto_layout, create_component, set_properties.",
+      "Post a command to be executed by the Figma plugin. Supports create_frame, create_text, create_rectangle, apply_auto_layout, create_component, set_properties, move_node, duplicate_node, delete_node, resize_node, group_nodes, ungroup_nodes.",
     inputSchema: toJsonSchema(PostCommandSchema),
   },
   {

@@ -12,6 +12,12 @@ import {
   applyAutoLayoutCommand,
   createComponentCommand,
   setPropertiesCommand,
+  moveNodeCommand,
+  duplicateNodeCommand,
+  deleteNodeCommand,
+  resizeNodeCommand,
+  groupNodesCommand,
+  ungroupNodesCommand,
 } from "../commands/templates.js";
 import {
   ToolResponse,
@@ -34,7 +40,7 @@ export async function postCommand(
         content: [
           {
             type: "text",
-            text: `Unknown command: ${input.command}. Supported commands: create_frame, create_text, create_rectangle, apply_auto_layout, create_component, set_properties`,
+            text: `Unknown command: ${input.command}. Supported commands: create_frame, create_text, create_rectangle, apply_auto_layout, create_component, set_properties, move_node, duplicate_node, delete_node, resize_node, group_nodes, ungroup_nodes`,
           },
         ],
         isError: true,
@@ -89,6 +95,50 @@ export async function postCommand(
         command = setPropertiesCommand({
           nodeId: input.parent,
           properties: validatedParams.properties,
+        });
+        break;
+      case "move_node":
+        command = moveNodeCommand({
+          nodeId: validatedParams.nodeId,
+          x: validatedParams.x,
+          y: validatedParams.y,
+          relative: validatedParams.relative,
+        });
+        break;
+      case "duplicate_node":
+        command = duplicateNodeCommand({
+          nodeId: validatedParams.nodeId,
+        });
+        break;
+      case "delete_node":
+        command = deleteNodeCommand({
+          nodeId: validatedParams.nodeId,
+        });
+        break;
+      case "resize_node":
+        if (!validatedParams.nodeId) {
+          throw new Error("resize_node requires a nodeId parameter");
+        }
+        command = resizeNodeCommand({
+          nodeId: validatedParams.nodeId,
+          width: validatedParams.width,
+          height: validatedParams.height,
+          relative: validatedParams.relative,
+          maintainAspectRatio: validatedParams.maintainAspectRatio,
+        });
+        break;
+      case "group_nodes":
+        command = groupNodesCommand({
+          nodeIds: validatedParams.nodeIds,
+          name: validatedParams.name,
+        });
+        break;
+      case "ungroup_nodes":
+        if (!validatedParams.nodeId) {
+          throw new Error("ungroup_nodes requires a nodeId parameter");
+        }
+        command = ungroupNodesCommand({
+          nodeId: validatedParams.nodeId,
         });
         break;
       default:

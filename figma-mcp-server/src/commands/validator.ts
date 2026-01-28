@@ -6,6 +6,12 @@ import {
   CreateComponentParamsSchema,
   ApplyStyleParamsSchema,
   SetPropertiesParamsSchema,
+  MoveNodeParamsSchema,
+  DuplicateNodeParamsSchema,
+  DeleteNodeParamsSchema,
+  ResizeNodeParamsSchema,
+  GroupNodesParamsSchema,
+  UngroupNodesParamsSchema,
   CommandType,
 } from "./types.js";
 import { logger } from "../logger.js";
@@ -36,6 +42,24 @@ export function validateCommandParams(command: string, params: any): any {
 
       case "set_properties":
         return SetPropertiesParamsSchema.parse(params);
+
+      case "move_node":
+        return MoveNodeParamsSchema.parse(params);
+
+      case "duplicate_node":
+        return DuplicateNodeParamsSchema.parse(params);
+
+      case "delete_node":
+        return DeleteNodeParamsSchema.parse(params);
+
+      case "resize_node":
+        return ResizeNodeParamsSchema.parse(params);
+
+      case "group_nodes":
+        return GroupNodesParamsSchema.parse(params);
+
+      case "ungroup_nodes":
+        return UngroupNodesParamsSchema.parse(params);
 
       default:
         logger.warn(`Unknown command type: ${command}`);
@@ -87,6 +111,12 @@ export function isSupportedCommand(command: string): command is CommandType {
     "create_component",
     "apply_style",
     "set_properties",
+    "move_node",
+    "duplicate_node",
+    "delete_node",
+    "resize_node",
+    "group_nodes",
+    "ungroup_nodes",
   ];
   return supportedCommands.includes(command as CommandType);
 }
