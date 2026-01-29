@@ -28,6 +28,7 @@ import {
 } from "../types.js";
 import { logger } from "../logger.js";
 import { getFileKey } from "./file-detection.js";
+import { retryWithBackoff } from "../utils/retry.js";
 
 /**
  * Post a command to be executed by the Figma plugin
@@ -322,25 +323,34 @@ ${commandIds.map((id, i) => `${i + 1}. ${id}`).join("\n")}`;
       resultText += `\n\n## Errors\n${errors.join("\n")}`;
     }
 
-    // Wait for all if requested
+    // Wait for all if requested (in parallel for better performance)
     if (input.wait_for_completion && commandIds.length > 0) {
       resultText += "\n\n## Waiting for completion...\n";
-      const results: string[] = [];
 
-      for (const commandId of commandIds) {
+      // Wait for all commands in parallel instead of sequentially
+      const completionPromises = commandIds.map(async (commandId) => {
         try {
           const response = await commandPoller.waitForCompletion(
             commandId,
             fileKey,
             30000,
           );
-          results.push(`✅ ${commandId}: ${response.status}`);
+          return { commandId, status: "success", response };
         } catch (error: any) {
-          results.push(`❌ ${commandId}: ${error.message}`);
+          return { commandId, status: "error", error: error.message };
         }
-      }
+      });
 
-      resultText += results.join("\n");
+      const results = await Promise.all(completionPromises);
+      const resultLines = results.map((r) => {
+        if (r.status === "success" && r.response) {
+          return `✅ ${r.commandId}: ${r.response.status}`;
+        } else {
+          return `❌ ${r.commandId}: ${r.error || "Unknown error"}`;
+        }
+      });
+
+      resultText += resultLines.join("\n");
     }
 
     return {

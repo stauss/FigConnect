@@ -13,19 +13,29 @@ import {
 } from "../types.js";
 import { logger } from "../logger.js";
 import { getFileKey } from "./file-detection.js";
+import { cacheManager } from "../cache/manager.js";
 
 export async function getFileStructure(
   input: GetFileStructureInput,
 ): Promise<ToolResponse> {
   try {
     const fileKey = await getFileKey(input.file_key);
+    const depth = input.depth || 5;
+    const cacheKey = `file_structure:${fileKey}:${depth}`;
+
+    // Check cache first
+    const cached = cacheManager.get<any>(cacheKey);
+    if (cached) {
+      logger.info(`Using cached file structure: ${fileKey}`);
+      return cached;
+    }
+
     logger.info(`Getting file structure: ${fileKey}`);
+    const file = (await figmaClient.getFile(fileKey, depth)) as any;
 
-    const file = (await figmaClient.getFile(fileKey, input.depth)) as any;
+    const treeView = formatNodeTree(file.document, 0, depth);
 
-    const treeView = formatNodeTree(file.document, 0, input.depth || 5);
-
-    return {
+    const result: ToolResponse = {
       content: [
         {
           type: "text",
@@ -33,6 +43,12 @@ export async function getFileStructure(
         },
       ],
     };
+
+    // Cache the result
+    const { CONFIG } = await import("../config.js");
+    cacheManager.set(cacheKey, result, CONFIG.cache.ttlFileStructure);
+
+    return result;
   } catch (error: any) {
     logger.error("Error getting file structure:", error);
     return {
@@ -47,6 +63,16 @@ export async function getNodeDetails(
 ): Promise<ToolResponse> {
   try {
     const fileKey = await getFileKey(input.file_key);
+    const nodeIdsKey = input.node_ids.sort().join(",");
+    const cacheKey = `node_details:${fileKey}:${nodeIdsKey}`;
+
+    // Check cache first
+    const cached = cacheManager.get<ToolResponse>(cacheKey);
+    if (cached) {
+      logger.info(`Using cached node details: ${fileKey}`);
+      return cached;
+    }
+
     logger.info(
       `Getting node details: ${input.node_ids.length} nodes from ${fileKey}`,
     );
@@ -73,7 +99,7 @@ ${JSON.stringify(node, null, 2)}
       })
       .join("\n\n---\n\n");
 
-    return {
+    const result: ToolResponse = {
       content: [
         {
           type: "text",
@@ -81,6 +107,12 @@ ${JSON.stringify(node, null, 2)}
         },
       ],
     };
+
+    // Cache the result
+    const { CONFIG } = await import("../config.js");
+    cacheManager.set(cacheKey, result, CONFIG.cache.ttlNodeDetails);
+
+    return result;
   } catch (error: any) {
     logger.error("Error getting node details:", error);
     return {

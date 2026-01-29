@@ -4,12 +4,14 @@ import { Logger } from "./utils/logger";
 const logger = new Logger("MCP Bridge");
 
 // Configuration
-const POLL_INTERVAL = 3000; // 3 seconds
+const POLL_INTERVAL_ACTIVE = 1000; // 1 second when commands are active
+const POLL_INTERVAL_IDLE = 3000; // 3 seconds when idle (adaptive polling)
 const BRIDGE_URL = "http://localhost:3030";
 let processor: CommandProcessor;
 let pollInterval: ReturnType<typeof setInterval> | null = null;
 let isRunning = false;
 let uiReady = false;
+let currentPollInterval = POLL_INTERVAL_IDLE;
 
 /**
  * Announce current file to bridge server
@@ -84,7 +86,7 @@ function onUIReady(): void {
 }
 
 /**
- * Start polling for commands
+ * Start polling for commands with adaptive interval
  */
 function startPolling(): void {
   if (pollInterval) {
@@ -92,17 +94,36 @@ function startPolling(): void {
     return;
   }
 
-  logger.info(`Starting polling (${POLL_INTERVAL}ms interval)`);
+  logger.info(
+    `Starting polling (adaptive: ${POLL_INTERVAL_ACTIVE}ms active, ${POLL_INTERVAL_IDLE}ms idle)`,
+  );
 
   // Initial poll
   processor.requestCommands();
 
-  // Set up interval
-  pollInterval = setInterval(() => {
+  // Set up adaptive polling
+  const poll = () => {
     if (isRunning) {
       processor.requestCommands();
+
+      // Check if there are active commands and adjust polling interval
+      const processedCount = processor.getProcessedCount();
+      const newInterval =
+        processedCount > 0 ? POLL_INTERVAL_ACTIVE : POLL_INTERVAL_IDLE;
+
+      if (newInterval !== currentPollInterval) {
+        currentPollInterval = newInterval;
+        // Restart interval with new timing
+        if (pollInterval) {
+          clearInterval(pollInterval);
+        }
+        pollInterval = setInterval(poll, currentPollInterval);
+        logger.debug(`Polling interval adjusted to ${currentPollInterval}ms`);
+      }
     }
-  }, POLL_INTERVAL);
+  };
+
+  pollInterval = setInterval(poll, currentPollInterval);
 }
 
 /**

@@ -115,7 +115,7 @@ export class CommandPoller {
   }
 
   /**
-   * Wait for command to complete
+   * Wait for command to complete with exponential backoff
    */
   async waitForCompletion(
     commandId: string,
@@ -123,25 +123,25 @@ export class CommandPoller {
     timeout: number = 30000,
   ): Promise<CommandResponse> {
     const startTime = Date.now();
+    let checkInterval = 200; // Start with 200ms (reduced from 1000ms)
+    const maxInterval = 2000; // Max 2 seconds between checks
+    let consecutiveNoChange = 0;
 
     return new Promise((resolve, reject) => {
-      const checkInterval = setInterval(async () => {
+      const checkCommand = async () => {
         const command = commandQueue.get(commandId);
 
         if (!command) {
-          clearInterval(checkInterval);
           reject(new Error("Command not found in queue"));
           return;
         }
 
         if (command.status === "completed" && command.response) {
-          clearInterval(checkInterval);
           resolve(command.response);
           return;
         }
 
         if (command.status === "failed") {
-          clearInterval(checkInterval);
           reject(
             new Error(`Command failed: ${command.response?.error?.message}`),
           );
@@ -149,14 +149,34 @@ export class CommandPoller {
         }
 
         if (command.status === "timeout" || Date.now() - startTime > timeout) {
-          clearInterval(checkInterval);
           reject(new Error("Command timed out"));
           return;
         }
 
         // Poll for updates
+        const previousStatus = command.status;
         await this.poll(fileKey).catch(() => {});
-      }, 1000); // Check every second
+
+        // Check if status changed
+        const updatedCommand = commandQueue.get(commandId);
+        if (updatedCommand && updatedCommand.status === previousStatus) {
+          consecutiveNoChange++;
+          // Exponential backoff: increase interval if no change
+          if (consecutiveNoChange > 5) {
+            checkInterval = Math.min(checkInterval * 1.5, maxInterval);
+            consecutiveNoChange = 0;
+          }
+        } else {
+          consecutiveNoChange = 0;
+          checkInterval = 200; // Reset to fast polling when status changes
+        }
+
+        // Schedule next check
+        setTimeout(checkCommand, checkInterval);
+      };
+
+      // Start checking immediately
+      checkCommand();
     });
   }
 }

@@ -7,6 +7,7 @@ import {
   ListToolsRequestSchema,
   CallToolResult,
 } from "@modelcontextprotocol/sdk/types.js";
+import type { Server as HttpServer } from "http";
 
 import { TOOLS } from "./tools/registry.js";
 import {
@@ -30,6 +31,7 @@ import {
 import { logger } from "./logger.js";
 import { CONFIG } from "./config.js";
 import { bridgeServer } from "./bridge/server.js";
+import { createSSETransport, stopSSEServer } from "./transport/sse.js";
 
 // Create MCP server
 const server = new Server(
@@ -146,6 +148,7 @@ async function main() {
   logger.info("Starting Figma MCP Server...");
   logger.info(`Figma API Base: ${CONFIG.figma.apiBase}`);
   logger.info(`Log Level: ${CONFIG.server.logLevel}`);
+  logger.info(`Transport: ${CONFIG.mcp.transport}`);
 
   // Start bridge server for plugin communication
   if (CONFIG.bridge.enabled) {
@@ -158,24 +161,50 @@ async function main() {
     }
   }
 
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  let transport: StdioServerTransport | any;
+  let sseHttpServer: HttpServer | null = null;
+
+  // Select transport based on configuration
+  if (CONFIG.mcp.transport === "sse") {
+    // SSE transport: HTTP server handles connections, server.connect() called per-connection
+    const sseSetup = await createSSETransport(server);
+    sseHttpServer = sseSetup.httpServer;
+    logger.info("Using SSE transport - waiting for client connections on /sse");
+    logger.info(
+      "Note: SSE transport creates connections on-demand when clients connect",
+    );
+  } else {
+    transport = new StdioServerTransport();
+    await server.connect(transport);
+    logger.info("Using stdio transport");
+  }
 
   logger.info("Figma MCP Server running");
+
+  // Store SSE server reference for graceful shutdown
+  if (sseHttpServer) {
+    (global as any).__sseHttpServer = sseHttpServer;
+  }
 }
 
 // Graceful shutdown
-process.on("SIGINT", async () => {
+async function shutdown() {
   logger.info("Shutting down...");
-  await bridgeServer.stop();
-  process.exit(0);
-});
 
-process.on("SIGTERM", async () => {
-  logger.info("Shutting down...");
+  // Stop bridge server
   await bridgeServer.stop();
+
+  // Stop SSE server if running
+  const sseHttpServer = (global as any).__sseHttpServer;
+  if (sseHttpServer) {
+    await stopSSEServer(sseHttpServer);
+  }
+
   process.exit(0);
-});
+}
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 
 main().catch((error) => {
   logger.error("Fatal error:", error);
