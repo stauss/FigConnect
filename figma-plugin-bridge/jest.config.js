@@ -22,24 +22,4 @@ export default {
   collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts"],
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
-  globals: {
-    figma: {
-      fileKey: "test-file-key",
-      currentPage: {
-        selection: [],
-      },
-      notify: jest.fn(),
-      showUI: jest.fn(),
-      ui: {
-        onmessage: null,
-        postMessage: jest.fn(),
-      },
-      on: jest.fn(),
-      getNodeById: jest.fn(),
-      createFrame: jest.fn(),
-      createText: jest.fn(),
-      createRectangle: jest.fn(),
-      loadFontAsync: jest.fn(),
-    },
-  },
 };

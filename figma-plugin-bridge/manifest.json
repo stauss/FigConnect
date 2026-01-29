@@ -1,5 +1,5 @@
 {
-  "name": "FigYah Bridge",
+  "name": "Figma MCP Bridge",
   "id": "figma-mcp-bridge-1234567890",
   "api": "1.0.0",
   "main": "dist/code.js",

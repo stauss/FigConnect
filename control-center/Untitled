@@ -1,0 +1,265 @@
+Access to image at 'https://www.gravatar.com/avatar/b7673837f3903f1f519f0b4f2816edd8?size=240&default=https%3A%2F%2Fs3-alpha.figma.com%2Fstatic%2Fuser_c_v2.png?c=1' from origin 'https://www.figma.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+www.gravatar.com/avatar/b7673837f3903f1f519f0b4f2816edd8?size=240&default=https%3A%2F%2Fs3-alpha.figma.com%2Fstatic%2Fuser_c_v2.png?c=1:1  GET https://www.gravatar.com/avatar/b7673837f3903f1f519f0b4f2816edd8?size=240&default=https%3A%2F%2Fs3-alpha.figma.com%2Fstatic%2Fuser_c_v2.png?c=1 net::ERR_FAILED 302 (Found)
+Image
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+U @ figma_app-028c4f4cda36cdbc.min.js.br:39
+g @ figma_app-028c4f4cda36cdbc.min.js.br:220
+y @ figma_app-028c4f4cda36cdbc.min.js.br:220
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:220
+aB @ vendor-core-40a6fcf84224b474.min.js.br:15
+oD @ vendor-core-40a6fcf84224b474.min.js.br:15
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:15
+oB @ vendor-core-40a6fcf84224b474.min.js.br:15
+oP @ vendor-core-40a6fcf84224b474.min.js.br:15
+t5 @ vendor-core-40a6fcf84224b474.min.js.br:15
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:15
+requestAnimationFrame
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:67
+nw @ 3701-5f918664eab11cc9.min.js.br:684
+a @ 3701-5f918664eab11cc9.min.js.br:915
+requestAnimationFrame @ 3701-5f918664eab11cc9.min.js.br:699
+_Async_requestAnimationFrame @ compiled_wasm.js.br:2
+$wasm-function[38952] @ compiled_wasm.wasm.br:0x228996d
+$wasm-function[8782] @ compiled_wasm.wasm.br:0x71e634
+(anonymous) @ compiled_wasm.js.br:2
+(anonymous) @ compiled_wasm.js.br:2
+_wrapCppCall @ compiled_wasm.js.br:2
+(anonymous) @ compiled_wasm.js.br:2
+onFrame @ 3701-5f918664eab11cc9.min.js.br:699
+nT @ 3701-5f918664eab11cc9.min.js.br:684
+u @ vendor-core-40a6fcf84224b474.min.js.br:58
+requestAnimationFrame
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:67
+nw @ 3701-5f918664eab11cc9.min.js.br:684
+a @ 3701-5f918664eab11cc9.min.js.br:915
+requestAnimationFrame @ 3701-5f918664eab11cc9.min.js.br:699
+_Async_requestAnimationFrame @ compiled_wasm.js.br:2
+$wasm-function[38952] @ compiled_wasm.wasm.br:0x228996d
+$wasm-function[8782] @ compiled_wasm.wasm.br:0x71e634
+(anonymous) @ compiled_wasm.js.br:2
+(anonymous) @ compiled_wasm.js.br:2
+(anonymous) @ compiled_wasm.js.br:2
+_wrapCppCall @ compiled_wasm.js.br:2
+(anonymous) @ compiled_wasm.js.br:2
+onFrame @ 3701-5f918664eab11cc9.min.js.br:699
+nT @ 3701-5f918664eab11cc9.min.js.br:684
+u @ vendor-core-40a6fcf84224b474.min.js.br:58
+requestAnimationFrame
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:67
+nw @ 3701-5f918664eab11cc9.min.js.br:684
+a @ 3701-5f918664eab11cc9.min.js.br:915
+requestAnimationFrame @ 3701-5f918664eab11cc9.min.js.br:699
+_Async_requestAnimationFrame @ compiled_wasm.js.br:2
+$wasm-function[38951] @ compiled_wasm.wasm.br:0x2289951
+$wasm-function[9484] @ compiled_wasm.wasm.br:0x7c3034
+$wasm-function[9571] @ compiled_wasm.wasm.br:0x7c8830
+$wasm-function[9482] @ compiled_wasm.wasm.br:0x7c2a92
+$wasm-function[1636] @ compiled_wasm.wasm.br:0x7bc0a
+(anonymous) @ compiled_wasm.js.br:2
+callMain @ compiled_wasm.js.br:2
+e @ compiled_wasm.js.br:2
+run @ compiled_wasm.js.br:2
+e @ compiled_wasm.js.br:2
+removeRunDependency @ compiled_wasm.js.br:2
+t @ compiled_wasm.js.br:2
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+time @ 3701-5f918664eab11cc9.min.js.br:915
+callMain @ figma_app-028c4f4cda36cdbc.min.js.br:39
+T @ 3701-5f918664eab11cc9.min.js.br:1903
+W @ figma_app-028c4f4cda36cdbc.min.js.br:39
+await in W
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:720
+await in (anonymous)
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:484
+ep @ 3701-5f918664eab11cc9.min.js.br:915
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:915
+await in (anonymous)
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:2359
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:50
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+dispatch @ vendor-core-40a6fcf84224b474.min.js.br:50
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:915
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:2359
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:50
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+dispatch @ vendor-core-40a6fcf84224b474.min.js.br:50
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:915
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:2359
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:50
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+dispatch @ vendor-core-40a6fcf84224b474.min.js.br:50
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:50
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+dispatch @ vendor-core-40a6fcf84224b474.min.js.br:50
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:50
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+d @ 3701-5f918664eab11cc9.min.js.br:1811
+V @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+time @ 3701-5f918664eab11cc9.min.js.br:915
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:684
+await in (anonymous)
+tS @ 3701-5f918664eab11cc9.min.js.br:684
+gh @ 3701-5f918664eab11cc9.min.js.br:684
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:4
+n @ 3701-5f918664eab11cc9.min.js.br:1778
+687474 @ figma_app-028c4f4cda36cdbc.min.js.br:4
+i @ runtime~figma_app-67a1154fa2a3c75e.min.js.br:3
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:517
+i.O @ runtime~figma_app-67a1154fa2a3c75e.min.js.br:3
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:517
+f @ runtime~figma_app-67a1154fa2a3c75e.min.js.br:3
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:3
+vendor-core-40a6fcf84224b474.min.js.br:58 [Fullscreen] loadtime=4.36s maxmem=50712324
+vendor-core-40a6fcf84224b474.min.js.br:67  POST https://www.figma.com/api/make/fetch_ds_code_gen_status 400 (Bad Request)
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:67
+h @ vendor-db8f607334d90209.min.js.br:3
+(anonymous) @ 3701-5f918664eab11cc9.min.js.br:1848
+T @ 3701-5f918664eab11cc9.min.js.br:1848
+C @ 3701-5f918664eab11cc9.min.js.br:1848
+r @ 3701-5f918664eab11cc9.min.js.br:1848
+o @ figma_app-028c4f4cda36cdbc.min.js.br:220
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:225
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:225
+aB @ vendor-core-40a6fcf84224b474.min.js.br:15
+oD @ vendor-core-40a6fcf84224b474.min.js.br:15
+oP @ vendor-core-40a6fcf84224b474.min.js.br:15
+t5 @ vendor-core-40a6fcf84224b474.min.js.br:15
+(anonymous) @ vendor-core-40a6fcf84224b474.min.js.br:15
+oB @ vendor-core-40a6fcf84224b474.min.js.br:15
+oE @ vendor-core-40a6fcf84224b474.min.js.br:15
+S @ vendor-core-40a6fcf84224b474.min.js.br:58
+N @ vendor-core-40a6fcf84224b474.min.js.br:58
+vendor-core-40a6fcf84224b474.min.js.br:58 [Sprigma] Sprig SDK is ready
+figma_app-028c4f4cda36cdbc.min.js.br:39 Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+v @ figma_app-028c4f4cda36cdbc.min.js.br:39
+decodeAsync @ figma_app-028c4f4cda36cdbc.min.js.br:39
+await in decodeAsync
+decodeImage @ figma_app-028c4f4cda36cdbc.min.js.br:39
+_ImageIo_decodeImage @ compiled_wasm.js.br:2
+$wasm-function[36825] @ compiled_wasm.wasm.br:0x20e5da1
+$wasm-function[18850] @ compiled_wasm.wasm.br:0x10cbda9
+$wasm-function[18848] @ compiled_wasm.wasm.br:0x10cb7f3
+$wasm-function[30870] @ compiled_wasm.wasm.br:0x1c36560
+(anonymous) @ compiled_wasm.js.br:2
+(anonymous) @ compiled_wasm.js.br:2
+_wrapCppCall @ compiled_wasm.js.br:2
+(anonymous) @ compiled_wasm.js.br:2
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.then
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+Promise.finally
+maybeDownloadMoreImages @ figma_app-028c4f4cda36cdbc.min.js.br:39
+(anonymous) @ figma_app-028c4f4cda36cdbc.min.js.br:39
+vendor-core-40a6fcf84224b474.min.js.br:58 [Local fonts] using agent

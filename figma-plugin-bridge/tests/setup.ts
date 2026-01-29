@@ -3,8 +3,10 @@
  * Mocks Figma API globals
  */
 
-// Mock Figma API globals
-global.figma = {
+import { jest } from "@jest/globals";
+
+const g = typeof globalThis !== "undefined" ? globalThis : (typeof global !== "undefined" ? global : (typeof window !== "undefined" ? window : {}));
+(g as any).figma = {
   fileKey: "test-file-key",
   currentPage: {
     selection: [],
@@ -21,4 +23,4 @@ global.figma = {
   createText: jest.fn(),
   createRectangle: jest.fn(),
   loadFontAsync: jest.fn(),
-} as any;
+};

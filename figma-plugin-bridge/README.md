@@ -38,6 +38,10 @@ npm run build
 
 ## Development
 
+This project follows the **SpecKitty** development methodology. Before making changes, please read the official guide:
+
+**[Development Workflow](./development_workflow.md)**
+
 ### Watch mode
 
 ```bash
