@@ -1,0 +1,55 @@
+.conversation-log {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.conversation-item {
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #007bff;
+}
+
+.conversation-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.conversation-author {
+  font-weight: 500;
+  color: #333;
+}
+
+.conversation-time {
+  color: #666;
+}
+
+.conversation-message {
+  color: #333;
+  line-height: 1.5;
+  margin-bottom: 0.25rem;
+}
+
+.conversation-file {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.empty-state {
+  color: #666;
+  text-align: center;
+  padding: 2rem;
+  font-style: italic;
+}

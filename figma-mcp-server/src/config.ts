@@ -43,9 +43,10 @@ export const CONFIG = {
     httpPort: parseInt(process.env.MCP_HTTP_PORT || "3031", 10),
     httpHost: process.env.MCP_HTTP_HOST || "localhost",
   },
+  storage: {
+    dataDir: process.env.FIGYAH_DATA_DIR || undefined, // Uses ~/.figyah by default (from APP_CONFIG)
+  },
 } as const;
 
-// Validate required configuration
-if (!CONFIG.figma.accessToken) {
-  throw new Error("FIGMA_ACCESS_TOKEN is required in environment variables");
-}
+// Note: Token validation now happens at runtime via configStore
+// Environment variable is optional if using storage-based config

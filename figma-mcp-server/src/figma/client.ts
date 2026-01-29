@@ -1,15 +1,15 @@
-import fetch from 'node-fetch';
-import { CONFIG } from '../config.js';
-import { logger } from '../logger.js';
+import fetch from "node-fetch";
+import { CONFIG } from "../config.js";
+import { logger } from "../logger.js";
 
 export class FigmaAPIError extends Error {
   constructor(
     message: string,
     public status?: number,
-    public code?: string
+    public code?: string,
   ) {
     super(message);
-    this.name = 'FigmaAPIError';
+    this.name = "FigmaAPIError";
   }
 }
 
@@ -18,6 +18,23 @@ export class FigmaClient {
   private token = CONFIG.figma.accessToken;
   private requestCount = 0;
   private requestWindowStart = Date.now();
+
+  /**
+   * Get access token (from config or storage)
+   */
+  private async getToken(): Promise<string> {
+    // Try storage first if env token not available
+    if (!this.token) {
+      try {
+        const { configStore } = await import("../storage/config-store.js");
+        const token = await configStore.getFigmaToken();
+        if (token) return token;
+      } catch (error) {
+        // Storage not available, fall back to env
+      }
+    }
+    return this.token;
+  }
 
   /**
    * Make GET request to Figma API
@@ -34,10 +51,17 @@ export class FigmaClient {
 
     logger.debug(`Figma API GET: ${url.toString()}`);
 
+    const token = await this.getToken();
+    if (!token) {
+      throw new Error(
+        "Figma access token not configured. Please set FIGMA_ACCESS_TOKEN or configure via control center.",
+      );
+    }
+
     const response = await fetch(url.toString(), {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'X-Figma-Token': this.token,
+        "X-Figma-Token": token,
       },
       signal: AbortSignal.timeout(CONFIG.figma.timeout),
     });
@@ -50,22 +74,22 @@ export class FigmaClient {
 
       // Handle specific error codes
       if (response.status === 404) {
-        throw new FigmaAPIError('File or resource not found', 404, 'NOT_FOUND');
+        throw new FigmaAPIError("File or resource not found", 404, "NOT_FOUND");
       }
       if (response.status === 403) {
         throw new FigmaAPIError(
-          'Access denied. Check your Figma token permissions',
+          "Access denied. Check your Figma token permissions",
           403,
-          'FORBIDDEN'
+          "FORBIDDEN",
         );
       }
       if (response.status === 429) {
-        throw new FigmaAPIError('Rate limit exceeded', 429, 'RATE_LIMITED');
+        throw new FigmaAPIError("Rate limit exceeded", 429, "RATE_LIMITED");
       }
 
       throw new FigmaAPIError(
         `Figma API error: ${response.statusText}`,
-        response.status
+        response.status,
       );
     }
 
@@ -109,7 +133,7 @@ export class FigmaClient {
    */
   async getNodes(fileKey: string, nodeIds: string[]) {
     return this.get(`/files/${fileKey}/nodes`, {
-      ids: nodeIds.join(','),
+      ids: nodeIds.join(","),
     });
   }
 
@@ -119,11 +143,11 @@ export class FigmaClient {
   async getImages(
     fileKey: string,
     nodeIds: string[],
-    format: string = 'png',
-    scale: number = 1
+    format: string = "png",
+    scale: number = 1,
   ) {
     return this.get(`/images/${fileKey}`, {
-      ids: nodeIds.join(','),
+      ids: nodeIds.join(","),
       format,
       scale: scale.toString(),
     });

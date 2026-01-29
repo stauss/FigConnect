@@ -32,12 +32,13 @@ import { logger } from "./logger.js";
 import { CONFIG } from "./config.js";
 import { bridgeServer } from "./bridge/server.js";
 import { createSSETransport, stopSSEServer } from "./transport/sse.js";
+import { APP_CONFIG } from "./app-config.js";
 
 // Create MCP server
 const server = new Server(
   {
-    name: "figma-mcp-server",
-    version: "1.0.0",
+    name: `${APP_CONFIG.nameLower}-mcp-server`,
+    version: APP_CONFIG.version,
   },
   {
     capabilities: {
@@ -145,7 +146,7 @@ server.setRequestHandler(
 
 // Start server
 async function main() {
-  logger.info("Starting Figma MCP Server...");
+  logger.info(`Starting ${APP_CONFIG.name} MCP Server...`);
   logger.info(`Figma API Base: ${CONFIG.figma.apiBase}`);
   logger.info(`Log Level: ${CONFIG.server.logLevel}`);
   logger.info(`Transport: ${CONFIG.mcp.transport}`);
@@ -179,7 +180,7 @@ async function main() {
     logger.info("Using stdio transport");
   }
 
-  logger.info("Figma MCP Server running");
+  logger.info(`${APP_CONFIG.name} MCP Server running`);
 
   // Store SSE server reference for graceful shutdown
   if (sseHttpServer) {

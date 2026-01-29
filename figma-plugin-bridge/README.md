@@ -1,4 +1,4 @@
-# Figma MCP Bridge Plugin
+# FigYah Bridge Plugin
 
 A Figma plugin that executes MCP commands from the bridge server, enabling AI-powered design manipulation.
 

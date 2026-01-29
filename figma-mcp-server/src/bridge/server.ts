@@ -5,6 +5,11 @@ import { commandQueue } from "../queue/manager.js";
 import { CommandResponse, CommandResponseSchema } from "../commands/types.js";
 import { logger } from "../logger.js";
 import { CONFIG } from "../config.js";
+import { configStore } from "../storage/config-store.js";
+import { database } from "../storage/database.js";
+import { historyStore } from "../storage/history-store.js";
+import { backupService } from "../backup/service.js";
+import { figmaClient } from "../figma/client.js";
 
 const execAsync = promisify(exec);
 
@@ -39,14 +44,16 @@ export class BridgeServer {
     try {
       // Find process using the port (works on macOS/Linux)
       const { stdout } = await execAsync(
-        `lsof -ti:${this.port} 2>/dev/null || true`
+        `lsof -ti:${this.port} 2>/dev/null || true`,
       );
-      
-      const pids = stdout.trim().split('\n').filter(Boolean);
-      
+
+      const pids = stdout.trim().split("\n").filter(Boolean);
+
       if (pids.length > 0) {
-        logger.info(`Found ${pids.length} existing process(es) on port ${this.port}: ${pids.join(', ')}`);
-        
+        logger.info(
+          `Found ${pids.length} existing process(es) on port ${this.port}: ${pids.join(", ")}`,
+        );
+
         // Kill each process
         for (const pid of pids) {
           try {
@@ -57,9 +64,9 @@ export class BridgeServer {
             logger.debug(`Could not kill process ${pid}: ${killError}`);
           }
         }
-        
+
         // Wait a moment for the port to be released
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     } catch (error) {
       // lsof might not be available, or other errors - continue anyway
@@ -73,7 +80,7 @@ export class BridgeServer {
   async start(): Promise<void> {
     // Kill any existing process on this port first
     await this.killExistingProcess();
-    
+
     return new Promise((resolve, reject) => {
       this.server = createServer((req, res) => {
         this.handleRequest(req, res);
@@ -84,18 +91,22 @@ export class BridgeServer {
           logger.warn(
             `Port ${this.port} still in use after cleanup attempt. Retrying...`,
           );
-          
+
           // Try one more time after a longer delay
           await this.killExistingProcess();
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
           try {
             this.server?.listen(this.port, () => {
-              logger.info(`Bridge server running on http://localhost:${this.port} (after retry)`);
+              logger.info(
+                `Bridge server running on http://localhost:${this.port} (after retry)`,
+              );
               resolve();
             });
           } catch (retryError) {
-            logger.error(`Bridge server port ${this.port} is still in use after retry.`);
+            logger.error(
+              `Bridge server port ${this.port} is still in use after retry.`,
+            );
             reject(error);
           }
         } else {
@@ -132,10 +143,16 @@ export class BridgeServer {
    * Handle incoming HTTP requests
    */
   private handleRequest(req: IncomingMessage, res: ServerResponse): void {
-    // Set CORS headers for Figma plugin iframe
+    // Set CORS headers for Figma plugin iframe and browser UI
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS",
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
 
     // Handle preflight
     if (req.method === "OPTIONS") {
@@ -171,6 +188,8 @@ export class BridgeServer {
       this.handlePostCurrentFile(req, res);
     } else if (req.method === "GET" && path === "/api/current-file") {
       this.handleGetCurrentFile(res);
+    } else if (path.startsWith("/api/ui/")) {
+      this.handleUIRequest(req, res, path);
     } else {
       this.sendError(res, 404, "Not Found");
     }
@@ -255,11 +274,38 @@ export class BridgeServer {
         if (response.status === "success") {
           commandQueue.markCompleted(commandId, response);
           logger.info(`Command ${commandId} completed successfully`);
+
+          // Update history
+          const queuedCommand = commandQueue.get(commandId);
+          if (queuedCommand) {
+            historyStore
+              .updateCommandStatus(
+                commandId,
+                "completed",
+                response.result,
+                undefined,
+                response.executionTime,
+              )
+              .catch((err) => logger.error("Failed to update history:", err));
+          }
         } else if (response.status === "error") {
           commandQueue.markFailed(commandId, response);
           logger.info(
             `Command ${commandId} failed: ${response.error?.message}`,
           );
+
+          // Update history
+          const queuedCommand = commandQueue.get(commandId);
+          if (queuedCommand) {
+            historyStore
+              .updateCommandStatus(
+                commandId,
+                "failed",
+                undefined,
+                response.error?.message || "Unknown error",
+              )
+              .catch((err) => logger.error("Failed to update history:", err));
+          }
         }
 
         this.sendJson(res, 200, { success: true });
@@ -420,6 +466,339 @@ export class BridgeServer {
     this.sendJson(res, 200, {
       fileKey: this.currentFile.fileKey,
       fileName: this.currentFile.fileName,
+    });
+  }
+
+  /**
+   * Handle UI API requests
+   */
+  private handleUIRequest(
+    req: IncomingMessage,
+    res: ServerResponse,
+    path: string,
+  ): void {
+    // Route UI endpoints
+    if (req.method === "GET" && path === "/api/ui/config") {
+      this.handleGetConfig(res);
+    } else if (req.method === "POST" && path === "/api/ui/config") {
+      this.handlePostConfig(req, res);
+    } else if (req.method === "GET" && path === "/api/ui/projects") {
+      this.handleGetProjects(res);
+    } else if (req.method === "POST" && path === "/api/ui/projects/connect") {
+      this.handleConnectProject(req, res);
+    } else if (
+      req.method === "POST" &&
+      path === "/api/ui/projects/disconnect"
+    ) {
+      this.handleDisconnectProject(req, res);
+    } else if (req.method === "GET" && path === "/api/ui/history") {
+      this.handleGetHistory(req, res);
+    } else if (req.method === "GET" && path === "/api/ui/conversations") {
+      this.handleGetConversations(req, res);
+    } else if (req.method === "GET" && path === "/api/ui/backups") {
+      this.handleGetBackups(req, res);
+    } else if (req.method === "POST" && path === "/api/ui/backups/restore") {
+      this.handleRestoreBackup(req, res);
+    } else if (req.method === "GET" && path === "/api/ui/status") {
+      this.handleGetStatus(res);
+    } else {
+      this.sendError(res, 404, "Not Found");
+    }
+  }
+
+  /**
+   * GET /api/ui/config - Get configuration
+   */
+  private async handleGetConfig(res: ServerResponse): Promise<void> {
+    try {
+      const config = await configStore.getConfig();
+      this.sendJson(res, 200, config);
+    } catch (error: any) {
+      logger.error("Error getting config:", error);
+      this.sendError(res, 500, error.message);
+    }
+  }
+
+  /**
+   * POST /api/ui/config - Save configuration
+   */
+  private async handlePostConfig(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): Promise<void> {
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+
+    req.on("end", async () => {
+      try {
+        const data = JSON.parse(body);
+        await configStore.saveConfig(data);
+        this.sendJson(res, 200, { success: true });
+      } catch (error: any) {
+        logger.error("Error saving config:", error);
+        this.sendError(res, 400, error.message);
+      }
+    });
+  }
+
+  /**
+   * GET /api/ui/projects - List projects/files
+   */
+  private async handleGetProjects(res: ServerResponse): Promise<void> {
+    try {
+      const connections = await database.getProjectConnections();
+      const currentFile = this.getCurrentFile();
+
+      // Add current file from plugin if not already in connections
+      if (currentFile) {
+        const exists = connections.find(
+          (c) => c.fileKey === currentFile.fileKey,
+        );
+        if (!exists) {
+          connections.push({
+            fileKey: currentFile.fileKey,
+            fileName: currentFile.fileName,
+            enabled: true,
+            connectedAt: new Date().toISOString(),
+            lastSeenAt: new Date().toISOString(),
+          });
+        } else {
+          // Update last seen
+          exists.lastSeenAt = new Date().toISOString();
+        }
+      }
+
+      this.sendJson(res, 200, { projects: connections });
+    } catch (error: any) {
+      logger.error("Error getting projects:", error);
+      this.sendError(res, 500, error.message);
+    }
+  }
+
+  /**
+   * POST /api/ui/projects/connect - Connect project/file
+   */
+  private async handleConnectProject(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): Promise<void> {
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+
+    req.on("end", async () => {
+      try {
+        const data = JSON.parse(body);
+        const { fileKey, fileName, projectId, projectName, pages, enabled } =
+          data;
+
+        if (!fileKey) {
+          this.sendError(res, 400, "fileKey is required");
+          return;
+        }
+
+        // Validate file exists
+        try {
+          const fileData = await figmaClient.getFile(fileKey, 1);
+          const actualFileName =
+            (fileData as any)?.name || fileName || `file-${fileKey}`;
+
+          const connection = {
+            fileKey,
+            fileName: actualFileName,
+            projectId,
+            projectName,
+            pages: pages || [],
+            enabled: enabled !== false,
+            connectedAt: new Date().toISOString(),
+            lastSeenAt: new Date().toISOString(),
+          };
+
+          await database.saveProjectConnection(connection);
+          this.sendJson(res, 200, { success: true, connection });
+        } catch (error: any) {
+          this.sendError(res, 400, `Invalid file key: ${error.message}`);
+        }
+      } catch (error: any) {
+        logger.error("Error connecting project:", error);
+        this.sendError(res, 400, error.message);
+      }
+    });
+  }
+
+  /**
+   * POST /api/ui/projects/disconnect - Disconnect project/file
+   */
+  private async handleDisconnectProject(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): Promise<void> {
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+
+    req.on("end", async () => {
+      try {
+        const data = JSON.parse(body);
+        const { fileKey } = data;
+
+        if (!fileKey) {
+          this.sendError(res, 400, "fileKey is required");
+          return;
+        }
+
+        await database.removeProjectConnection(fileKey);
+        this.sendJson(res, 200, { success: true });
+      } catch (error: any) {
+        logger.error("Error disconnecting project:", error);
+        this.sendError(res, 400, error.message);
+      }
+    });
+  }
+
+  /**
+   * GET /api/ui/history - Get command history
+   */
+  private async handleGetHistory(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): Promise<void> {
+    try {
+      const url = new URL(req.url || "/", `http://localhost:${this.port}`);
+      const fileKey = url.searchParams.get("fileKey") || undefined;
+      const status = url.searchParams.get("status") as any;
+      const after = url.searchParams.get("after") || undefined;
+      const before = url.searchParams.get("before") || undefined;
+      const limit = url.searchParams.get("limit")
+        ? parseInt(url.searchParams.get("limit")!, 10)
+        : undefined;
+
+      const history = await historyStore.getCommandHistory({
+        fileKey,
+        status,
+        after,
+        before,
+        limit,
+      });
+
+      this.sendJson(res, 200, { history });
+    } catch (error: any) {
+      logger.error("Error getting history:", error);
+      this.sendError(res, 500, error.message);
+    }
+  }
+
+  /**
+   * GET /api/ui/conversations - Get conversation log
+   */
+  private async handleGetConversations(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): Promise<void> {
+    try {
+      const url = new URL(req.url || "/", `http://localhost:${this.port}`);
+      const fileKey = url.searchParams.get("fileKey") || undefined;
+      const after = url.searchParams.get("after") || undefined;
+      const before = url.searchParams.get("before") || undefined;
+      const limit = url.searchParams.get("limit")
+        ? parseInt(url.searchParams.get("limit")!, 10)
+        : undefined;
+
+      const conversations = await historyStore.getConversations({
+        fileKey,
+        after,
+        before,
+        limit,
+      });
+
+      this.sendJson(res, 200, { conversations });
+    } catch (error: any) {
+      logger.error("Error getting conversations:", error);
+      this.sendError(res, 500, error.message);
+    }
+  }
+
+  /**
+   * GET /api/ui/backups - List backups
+   */
+  private async handleGetBackups(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): Promise<void> {
+    try {
+      const url = new URL(req.url || "/", `http://localhost:${this.port}`);
+      const fileKey = url.searchParams.get("fileKey");
+
+      if (!fileKey) {
+        this.sendError(res, 400, "fileKey is required");
+        return;
+      }
+
+      const backups = await backupService.getBackups(fileKey);
+      this.sendJson(res, 200, { backups });
+    } catch (error: any) {
+      logger.error("Error getting backups:", error);
+      this.sendError(res, 500, error.message);
+    }
+  }
+
+  /**
+   * POST /api/ui/backups/restore - Restore from backup
+   */
+  private async handleRestoreBackup(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): Promise<void> {
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+
+    req.on("end", async () => {
+      try {
+        const data = JSON.parse(body);
+        const { backupId } = data;
+
+        if (!backupId) {
+          this.sendError(res, 400, "backupId is required");
+          return;
+        }
+
+        const restoreData = await backupService.getBackupForRestore(backupId);
+        this.sendJson(res, 200, restoreData);
+      } catch (error: any) {
+        logger.error("Error restoring backup:", error);
+        this.sendError(res, 400, error.message);
+      }
+    });
+  }
+
+  /**
+   * GET /api/ui/status - Get MCP connection status
+   */
+  private handleGetStatus(res: ServerResponse): void {
+    const currentFile = this.getCurrentFile();
+    const stats = commandQueue.getStats();
+
+    this.sendJson(res, 200, {
+      bridgeServer: {
+        running: true,
+        port: this.port,
+      },
+      currentFile: currentFile || null,
+      queue: stats,
+      mcpServer: {
+        // Could add more MCP server status here
+        connected: true,
+      },
     });
   }
 

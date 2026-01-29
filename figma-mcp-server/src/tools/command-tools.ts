@@ -29,6 +29,9 @@ import {
 import { logger } from "../logger.js";
 import { getFileKey } from "./file-detection.js";
 import { retryWithBackoff } from "../utils/retry.js";
+import { backupService } from "../backup/service.js";
+import { historyStore } from "../storage/history-store.js";
+import { figmaClient } from "../figma/client.js";
 
 /**
  * Post a command to be executed by the Figma plugin
@@ -151,8 +154,47 @@ export async function postCommand(
         throw new Error(`Unsupported command: ${input.command}`);
     }
 
+    // Create backup before command execution (for destructive/modifying commands)
+    const modifyingCommands = [
+      "delete_node",
+      "move_node",
+      "resize_node",
+      "set_properties",
+      "duplicate_node",
+      "group_nodes",
+      "ungroup_nodes",
+    ];
+    let backupId: string | undefined;
+    if (modifyingCommands.includes(input.command)) {
+      try {
+        // Get file name for backup
+        const fileData = await figmaClient
+          .getFile(fileKey, 1)
+          .catch(() => null);
+        const fileName = (fileData as any)?.name || `file-${fileKey}`;
+
+        const backup = await backupService.createBackup(fileKey, fileName);
+        backupId = backup.id;
+        logger.info(`Backup created before command: ${backupId}`);
+      } catch (error: any) {
+        logger.warn(
+          `Failed to create backup (continuing anyway): ${error.message}`,
+        );
+      }
+    }
+
     // Add to queue
     const commandId = commandQueue.add(command, fileKey, input.timeout);
+
+    // Add to history
+    await historyStore.addCommand({
+      commandId,
+      fileKey,
+      command: input.command,
+      params: validatedParams,
+      status: "pending",
+      backupId,
+    });
 
     // Format the command message (for display/debugging)
     const message = formatCommandMessage(command);

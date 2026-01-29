@@ -30,7 +30,7 @@ function announceCurrentFile(fileKey: string, fileName: string): void {
  * Initialize the plugin
  */
 async function initialize(): Promise<void> {
-  logger.info("Figma MCP Bridge starting...");
+  logger.info("FigYah Bridge starting...");
 
   try {
     // Show hidden UI for network access (Figma plugins need UI to make network requests)
@@ -64,7 +64,7 @@ async function initialize(): Promise<void> {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     logger.error("Initialization failed:", error);
-    figma.notify(`MCP Bridge failed to start: ${message}`, { error: true });
+    figma.notify(`FigYah Bridge failed to start: ${message}`, { error: true });
   }
 }
 
@@ -80,7 +80,7 @@ function onUIReady(): void {
   startPolling();
 
   // Notify user
-  figma.notify("MCP Bridge running - monitoring for commands", {
+  figma.notify("FigYah Bridge running - monitoring for commands", {
     timeout: 3000,
   });
 }
