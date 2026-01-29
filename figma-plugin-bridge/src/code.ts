@@ -5,10 +5,24 @@ const logger = new Logger("MCP Bridge");
 
 // Configuration
 const POLL_INTERVAL = 3000; // 3 seconds
+const BRIDGE_URL = "http://localhost:3030";
 let processor: CommandProcessor;
 let pollInterval: ReturnType<typeof setInterval> | null = null;
 let isRunning = false;
 let uiReady = false;
+
+/**
+ * Announce current file to bridge server
+ */
+function announceCurrentFile(fileKey: string, fileName: string): void {
+  figma.ui.postMessage({
+    type: "fetch",
+    url: `${BRIDGE_URL}/api/current-file`,
+    method: "POST",
+    body: JSON.stringify({ fileKey, fileName }),
+  });
+  logger.info(`Announcing file: ${fileName} (${fileKey})`);
+}
 
 /**
  * Initialize the plugin
@@ -30,9 +44,14 @@ async function initialize(): Promise<void> {
     // Get current file key
     // Note: figma.fileKey is available in the plugin API
     const fileKey = figma.fileKey;
+    const fileName = figma.root.name;
+
     if (fileKey) {
       processor.setFileKey(fileKey);
       logger.info("File key: " + fileKey);
+
+      // Announce current file to bridge server
+      announceCurrentFile(fileKey, fileName);
     } else {
       // If no file key available, don't filter - get all commands
       logger.info("No file key available, will fetch all commands");

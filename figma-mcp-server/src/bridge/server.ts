@@ -1,32 +1,103 @@
 import { createServer, IncomingMessage, ServerResponse } from "http";
+import { exec } from "child_process";
+import { promisify } from "util";
 import { commandQueue } from "../queue/manager.js";
 import { CommandResponse, CommandResponseSchema } from "../commands/types.js";
 import { logger } from "../logger.js";
 import { CONFIG } from "../config.js";
 
+const execAsync = promisify(exec);
+
 export class BridgeServer {
   private server: ReturnType<typeof createServer> | null = null;
   private port: number;
+  private currentFile: { fileKey: string; fileName: string } | null = null;
 
   constructor(port: number = 3030) {
     this.port = port;
   }
 
   /**
+   * Get the current file key
+   */
+  getCurrentFile(): { fileKey: string; fileName: string } | null {
+    return this.currentFile;
+  }
+
+  /**
+   * Set the current file key
+   */
+  setCurrentFile(fileKey: string, fileName: string): void {
+    this.currentFile = { fileKey, fileName };
+    logger.info(`Current file set: ${fileName} (${fileKey})`);
+  }
+
+  /**
+   * Kill any existing process using the specified port
+   */
+  private async killExistingProcess(): Promise<void> {
+    try {
+      // Find process using the port (works on macOS/Linux)
+      const { stdout } = await execAsync(
+        `lsof -ti:${this.port} 2>/dev/null || true`
+      );
+      
+      const pids = stdout.trim().split('\n').filter(Boolean);
+      
+      if (pids.length > 0) {
+        logger.info(`Found ${pids.length} existing process(es) on port ${this.port}: ${pids.join(', ')}`);
+        
+        // Kill each process
+        for (const pid of pids) {
+          try {
+            await execAsync(`kill -9 ${pid}`);
+            logger.info(`Killed process ${pid}`);
+          } catch (killError) {
+            // Process may have already exited
+            logger.debug(`Could not kill process ${pid}: ${killError}`);
+          }
+        }
+        
+        // Wait a moment for the port to be released
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    } catch (error) {
+      // lsof might not be available, or other errors - continue anyway
+      logger.debug(`Could not check for existing processes: ${error}`);
+    }
+  }
+
+  /**
    * Start the HTTP bridge server
    */
-  start(): Promise<void> {
+  async start(): Promise<void> {
+    // Kill any existing process on this port first
+    await this.killExistingProcess();
+    
     return new Promise((resolve, reject) => {
       this.server = createServer((req, res) => {
         this.handleRequest(req, res);
       });
 
-      this.server.on("error", (error: Error & { code?: string }) => {
+      this.server.on("error", async (error: Error & { code?: string }) => {
         if (error.code === "EADDRINUSE") {
-          logger.error(
-            `Bridge server port ${this.port} is already in use. Try a different port.`,
+          logger.warn(
+            `Port ${this.port} still in use after cleanup attempt. Retrying...`,
           );
-          reject(error);
+          
+          // Try one more time after a longer delay
+          await this.killExistingProcess();
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          try {
+            this.server?.listen(this.port, () => {
+              logger.info(`Bridge server running on http://localhost:${this.port} (after retry)`);
+              resolve();
+            });
+          } catch (retryError) {
+            logger.error(`Bridge server port ${this.port} is still in use after retry.`);
+            reject(error);
+          }
         } else {
           logger.error("Bridge server error:", error);
           reject(error);
@@ -96,6 +167,10 @@ export class BridgeServer {
       this.handlePostCapabilities(req, res);
     } else if (req.method === "GET" && path === "/api/capabilities") {
       this.handleGetCapabilities(res);
+    } else if (req.method === "POST" && path === "/api/current-file") {
+      this.handlePostCurrentFile(req, res);
+    } else if (req.method === "GET" && path === "/api/current-file") {
+      this.handleGetCurrentFile(res);
     } else {
       this.sendError(res, 404, "Not Found");
     }
@@ -282,6 +357,69 @@ export class BridgeServer {
     this.sendJson(res, 200, {
       capabilities: [],
       message: "Capability registry not yet implemented",
+    });
+  }
+
+  /**
+   * POST /api/current-file - Receive current file announcement from plugin
+   */
+  private handlePostCurrentFile(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): void {
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+
+    req.on("end", () => {
+      try {
+        const data = JSON.parse(body);
+        const { fileKey, fileName } = data;
+
+        if (!fileKey) {
+          this.sendError(res, 400, "Missing fileKey");
+          return;
+        }
+
+        this.setCurrentFile(fileKey, fileName || "Unknown");
+        logger.info(
+          `Received current file: ${fileName || "Unknown"} (${fileKey})`,
+        );
+
+        this.sendJson(res, 200, {
+          success: true,
+          fileKey,
+          fileName: fileName || "Unknown",
+        });
+      } catch (error) {
+        logger.error("Error processing current file:", error);
+        this.sendError(res, 400, "Invalid JSON");
+      }
+    });
+
+    req.on("error", (error) => {
+      logger.error("Request error:", error);
+      this.sendError(res, 500, "Request Error");
+    });
+  }
+
+  /**
+   * GET /api/current-file - Get the current file key
+   */
+  private handleGetCurrentFile(res: ServerResponse): void {
+    if (!this.currentFile) {
+      this.sendJson(res, 200, {
+        fileKey: null,
+        fileName: null,
+      });
+      return;
+    }
+
+    this.sendJson(res, 200, {
+      fileKey: this.currentFile.fileKey,
+      fileName: this.currentFile.fileName,
     });
   }
 

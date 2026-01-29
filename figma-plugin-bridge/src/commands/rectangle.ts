@@ -44,7 +44,7 @@ export async function executeCreateRectangle(
           return {
             type: "SOLID" as const,
             color: rgbToFigmaColor(fill.color),
-            opacity: fill.opacity ?? 1,
+            opacity: fill.opacity != null ? fill.opacity : 1,
           };
         }
         // Default to gray solid
@@ -63,7 +63,7 @@ export async function executeCreateRectangle(
           return {
             type: "SOLID" as const,
             color: rgbToFigmaColor(stroke.color),
-            opacity: stroke.opacity ?? 1,
+            opacity: stroke.opacity != null ? stroke.opacity : 1,
           };
         }
         // Default to black stroke

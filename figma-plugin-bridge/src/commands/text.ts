@@ -45,7 +45,7 @@ export async function executeCreateText(
           return {
             type: "SOLID" as const,
             color: rgbToFigmaColor(fill.color),
-            opacity: fill.opacity ?? 1,
+            opacity: fill.opacity != null ? fill.opacity : 1,
           };
         }
         // Default to black
